@@ -10,6 +10,13 @@ Database Testing
 | Slides: https://github.com/rsyring/bookorders
 | Demo: https://github.com/rsyring/db-testing-slides
 
+.. epigraph::
+    We solve the problems our customers can't.
+
+.. image:: _static/level12-logo2.png
+
+
+
 Let's Talk
 ==========
 
@@ -426,6 +433,11 @@ Don't do premature optimization!  (example)
 - Creating testing objects without committing or flushing to the DB.
 - Testing the configuration, not the execution (nullability & FK)
 - Knowing when to commit (nested objects)
+
+.. nextslide::
+
+.. rst-class:: build
+
 - Be careful of network/vm issues that can slow data connections (dev example).
 - Maybe test with in-memory SQLite (watch our for foreign key, data type issues)
 - Run only the tests you need, follow the inside-out pattern.
@@ -471,7 +483,7 @@ Migration: Testing Workflow
 - Run tests to verify schema cleanup (SQL)
 - Run tests to verify migration that didn't depend on old schema (current Entities)
 
-Thanks & Plug
+Thanks
 ======================
 
 Thanks for attending!
