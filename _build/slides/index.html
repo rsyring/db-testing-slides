@@ -1,0 +1,760 @@
+<!DOCTYPE html>
+
+
+<html>
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Database Testing &mdash; Database Testing 2015.08.01 documentation</title>
+    
+    <link rel="stylesheet" href="_static/basic.css" type="text/css" />
+    <link rel="stylesheet" href="_static/styles.css" type="text/css" />
+    <link rel="stylesheet" href="_static/single.css" type="text/css" />
+    
+    <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+    
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '2015.08.01',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/common.js"></script>
+    
+    <script type="text/javascript" src="_static/slides.js"></script>
+    <script type="text/javascript" src="_static/sync.js"></script>
+    <script type="text/javascript" src="_static/controller.js"></script>
+    <script type="text/javascript" src="_static/init.js"></script>
+    
+    
+    <link rel="top" title="Database Testing 2015.08.01 documentation" href="#" /> 
+  </head>
+  <body>
+
+<section
+   id="slide_container"
+   class='slides layout-regular'>
+
+
+  
+<article class="slide level-1" id="database-testing">
+
+<h1>Database Testing</h1>
+
+<div class="line-block">
+<div class="line">By: Randy Syring</div>
+<div class="line">Twitter: &#64;RandySyring</div>
+<div class="line">Email: <a class="reference external" href="mailto:randy&#46;syring&#37;&#52;&#48;level12&#46;io">randy<span>&#46;</span>syring<span>&#64;</span>level12<span>&#46;</span>io</a></div>
+<div class="line">Slides: <a class="reference external" href="https://github.com/rsyring/bookorders">https://github.com/rsyring/bookorders</a></div>
+<div class="line">Demo: <a class="reference external" href="https://github.com/rsyring/db-testing-slides">https://github.com/rsyring/db-testing-slides</a></div>
+</div>
+<q class="epigraph">
+We solve the problems our customers can't.</q>
+<img alt="_images/level12-logo2.png" src="_images/level12-logo2.png" />
+
+
+
+
+</article>
+<article class="slide level-2" id="let-s-talk">
+
+<h2>Let's Talk</h2>
+
+<ul class="simple">
+<li>This presentation is mostly about concepts, not detailed code.</li>
+<li>I like discussion &amp; feedback.</li>
+<li>I will likely have extra time, so please ask questions.</li>
+<li>It's great if I don't know something, don't be afraid to ask!</li>
+</ul>
+
+
+
+
+</article>
+<article class="slide level-2" id="background-assumptions">
+
+<h2>Background &amp; Assumptions</h2>
+
+<ul class="simple">
+<li>Building DB driven web apps for 10 years.</li>
+<li>In Python and w/ emphasis on testing for about 6 years.</li>
+<li>Not operating <em>&quot;at scale&quot;</em>.</li>
+<li>Biggest app: 5,275 tests across 207 tables in ~24 mins.</li>
+<li>I prefer to have the DB server involved when testing the DB.</li>
+<li>YMMV :)</li>
+</ul>
+
+
+
+
+</article>
+<article class="slide level-2" id="why-database-testing-is-hard">
+
+<h2>Why Database Testing is Hard:</h2>
+
+<ul class="simple">
+<li>Schema setup</li>
+<li>Shared state</li>
+<li>Lack of creativity (a.k.a. creating test data)</li>
+<li>Slow</li>
+</ul>
+<p>What can you add?</p>
+
+
+
+
+</article>
+<article class="slide level-2" id="assets-or-liabilities">
+
+<h2>Assets or Liabilities?</h2>
+
+<p>The items just discussed are testing <em>liabilities</em>.</p>
+<p>I like assets, not expenses or liabilities.  How about you?</p>
+
+
+
+
+</article>
+<article class="slide level-2" id="tests-as-assets">
+
+<h2>Tests as Assets</h2>
+
+<ul class="simple">
+<li>Easy to setup: the less manual steps the better.</li>
+<li>Consistent: avoid environment surprises.</li>
+<li>Idempotent (?): avoid cross-test data contamination.</li>
+<li>Data creation made easy.</li>
+<li>Enforce good patterns: my memory is getting worse.</li>
+<li>Fast: quick iterations make testing enjoyable.</li>
+<li>Flexible: can roll w/ the punches when assumptions change (migrations)</li>
+</ul>
+
+
+
+
+</article>
+<article class="slide level-2" id="id1">
+
+<h2>Tests as Assets</h2>
+
+<ul class="simple">
+<li><strong>Easy to setup: the less manual steps the better.</strong></li>
+<li>Consistent: avoid environment surprises.</li>
+<li>Idempotent (?): avoid cross-test data contamination.</li>
+<li>Data creation made easy.</li>
+<li>Enforce good patterns: my memory is getting worse.</li>
+<li>Fast: quick iterations make testing enjoyable.</li>
+<li>Flexible: can roll w/ the punches when assumptions change (migrations)</li>
+</ul>
+
+
+
+
+</article>
+<article class="slide level-2" id="easy-setup">
+
+<h2>Easy Setup</h2>
+
+<p>Can't emphasize this enough, make it easy for people to run your tests!</p>
+<p>Live example - assumptions:</p>
+<ul class="simple">
+<li>Ubuntu 14.04</li>
+<li>Python 3.4 (preferably older than 3.4.0)</li>
+<li>You have a PostgreSQL server available, preferably with user/password/db setup according to
+<code class="code docutils literal"><span class="pre">bookorders.conf:TestProfile</span></code></li>
+<li>You have a recent version of Tox installed at the system or user level.</li>
+</ul>
+
+
+
+
+</article>
+<article class="slide level-2" id="no-hassle-clone-to-testing">
+
+<h2>No Hassle Clone to Testing</h2>
+
+<div class="highlight-bash"><div class="highlight"><pre><span class="nv">$ </span>git clone https://github.com/rsyring/bookorders example
+<span class="nv">$ </span><span class="nb">cd </span>example/
+<span class="nv">$ </span>tox
+<span class="o">[</span>...snip...<span class="o">]</span>
+py34 runtests: commands<span class="o">[</span>1<span class="o">]</span> <span class="p">|</span> py.test -q --tb native --strict --cov bookorders --cov-report xml --no-cov-on-fail --junit-xml<span class="o">=</span>.pytests.xml bookorders
+...............
+<span class="o">[</span>...snip...<span class="o">]</span>
+flake8 runtests: commands<span class="o">[</span>0<span class="o">]</span> <span class="p">|</span> flake8 bookorders
+______________________________________________ summary _______________________________________________
+  py34: commands succeeded
+  flake8: commands succeeded
+  congratulations :<span class="o">)</span>
+</pre></div>
+</div>
+
+
+
+
+</article>
+<article class="slide level-2" id="what-makes-this-possible">
+
+<h2>What Makes This Possible</h2>
+
+<ul class="simple">
+<li>We can make some assumptions about the environment.</li>
+<li>We have a convention about the default DB connection, but this is easily configured.</li>
+<li>We use a wheelhouse (<a class="reference external" href="https://pypi.python.org/pypi/Wheelhouse">https://pypi.python.org/pypi/Wheelhouse</a>).</li>
+<li>All tests must be ran w/ Tox.</li>
+<li>This is all closely tied to our CI environment.</li>
+</ul>
+<p>If you aren't doing something like this, why?</p>
+
+
+
+
+</article>
+<article class="slide level-2" id="id2">
+
+<h2>Tests as Assets</h2>
+
+<ul class="simple">
+<li>Easy to setup: the less manual steps the better.</li>
+<li><strong>Consistent: avoid environment surprises.</strong></li>
+<li>Idempotent (?): avoid cross-test data contamination.</li>
+<li>Data creation made easy.</li>
+<li>Enforce good patterns: my memory is getting worse.</li>
+<li>Fast: quick iterations make testing enjoyable.</li>
+<li>Flexible: can roll w/ the punches when assumptions change (migrations)</li>
+</ul>
+
+
+
+
+</article>
+<article class="slide level-2" id="consistency">
+
+<h2>Consistency</h2>
+
+<ul class="simple">
+<li>Everyone's tests should pass or fail the same.</li>
+<li>How are you managing your library versions?</li>
+</ul>
+
+
+
+
+</article>
+<article class="slide level-2" id="id3">
+
+<h2>Tests as Assets</h2>
+
+<ul class="simple">
+<li>Easy to setup: the less manual steps the better.</li>
+<li>Consistent: avoid environment surprises.</li>
+<li><strong>Idempotent (?): avoid cross-test data contamination.</strong></li>
+<li>Data creation made easy.</li>
+<li>Enforce good patterns: my memory is getting worse.</li>
+<li>Fast: quick iterations make testing enjoyable.</li>
+<li>Flexible: can roll w/ the punches when assumptions change (migrations)</li>
+</ul>
+
+
+
+
+</article>
+<article class="slide level-2" id="idempotent-test-prep">
+
+<h2>Idempotent: Test Prep</h2>
+
+<p>Database is recreated every time tests are ran:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="c"># https://github.com/level12/keg/blob/master/keg/db/__init__.py</span>
+<span class="k">class</span> <span class="nc">DatabaseManager</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+
+    <span class="k">def</span> <span class="nf">init_events</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">testing_run_start</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">on_testing_start</span><span class="p">,</span> <span class="n">sender</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">app</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">on_testing_start</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">app</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">db_init_with_clear</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">db_init_with_clear</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">db_clear</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">prep_empty</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">db_init</span><span class="p">()</span>
+</pre></div>
+</div>
+
+
+
+
+</article>
+<article class="slide level-2" id="id8">
+
+<h2>Idempotent: Test Prep</h2>
+
+<p>Tests are responsible for making sure DB is in the required state:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="k">class</span> <span class="nc">TestOrdersCrud</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+
+    <span class="k">def</span> <span class="nf">setup</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; py.test will run this before every test</span>
+<span class="sd">            method in the class &quot;&quot;&quot;</span>
+        <span class="n">Order</span><span class="o">.</span><span class="n">delete_all</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">test_add_order</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">OrderCrud</span><span class="o">.</span><span class="n">add_order</span><span class="p">(</span><span class="s">&#39;...&#39;</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">Order</span><span class="o">.</span><span class="n">query</span><span class="o">.</span><span class="n">count</span><span class="p">()</span> <span class="o">==</span> <span class="mi">1</span>
+</pre></div>
+</div>
+
+
+
+
+</article>
+<article class="slide level-2" id="id9">
+
+<h2>Idempotent: Test Prep</h2>
+
+<p>Test prep can be done at the test, class, or module level:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="k">def</span> <span class="nf">setup_module</span><span class="p">(</span><span class="n">module</span><span class="p">):</span>
+    <span class="n">Publisher</span><span class="o">.</span><span class="n">delete_all</span><span class="p">()</span>
+
+<span class="k">class</span> <span class="nc">TestBookEntity</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">setup_class</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">cls</span><span class="o">.</span><span class="n">author</span> <span class="o">=</span> <span class="n">Author</span><span class="o">.</span><span class="n">testing_create</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">setup</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">Book</span><span class="o">.</span><span class="n">delete_all</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">test_books_author</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">book</span> <span class="o">=</span> <span class="n">Book</span><span class="o">.</span><span class="n">testing_create</span><span class="p">(</span><span class="n">author</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">author</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">book</span><span class="o">.</span><span class="n">author</span> <span class="ow">is</span> <span class="bp">self</span><span class="o">.</span><span class="n">author</span>
+        <span class="k">assert</span> <span class="n">Book</span><span class="o">.</span><span class="n">query</span><span class="o">.</span><span class="n">count</span><span class="p">()</span> <span class="o">==</span> <span class="mi">0</span>
+</pre></div>
+</div>
+
+
+
+
+</article>
+<article class="slide level-2" id="idempotent-test-cleanup-is-ok">
+
+<h2>Idempotent: Test Cleanup is OK</h2>
+
+<p>I prefer data setup as part of the test prep phase...but:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">user_id</span> <span class="o">=</span> <span class="bp">None</span>
+<span class="k">def</span> <span class="nf">setup_module</span><span class="p">(</span><span class="n">module</span><span class="p">):</span>
+    <span class="k">global</span> <span class="n">user_id</span>
+    <span class="n">user_id</span> <span class="o">=</span> <span class="n">User</span><span class="o">.</span><span class="n">testing_create</span><span class="p">()</span><span class="o">.</span><span class="n">id</span>
+
+<span class="k">class</span> <span class="nc">TestOrdersCrud</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">test_listing</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">Order</span><span class="o">.</span><span class="n">testing_create</span><span class="p">()</span>
+        <span class="n">resp</span> <span class="o">=</span> <span class="n">app</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;/orders/list&#39;</span><span class="p">,</span> <span class="n">user_id</span><span class="o">=</span><span class="n">user_id</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">resp</span><span class="o">.</span><span class="n">pyquery</span><span class="p">(</span><span class="s">&#39;table td&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">length</span> <span class="o">==</span> <span class="mi">1</span>
+
+<span class="k">class</span> <span class="nc">TestPublishersCrud</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">test_listing</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">Publisher</span><span class="o">.</span><span class="n">testing_create</span><span class="p">()</span>
+        <span class="n">resp</span> <span class="o">=</span> <span class="n">app</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;/publisher/list&#39;</span><span class="p">,</span> <span class="n">user_id</span><span class="o">=</span><span class="n">user_id</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">resp</span><span class="o">.</span><span class="n">pyquery</span><span class="p">(</span><span class="s">&#39;table td&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">length</span> <span class="o">==</span> <span class="mi">1</span>
+</pre></div>
+</div>
+
+
+
+
+</article>
+<article class="slide level-2" id="id10">
+
+<h2>Idempotent: Test Cleanup is OK</h2>
+
+<div class="highlight-python"><div class="highlight"><pre><span class="c"># setup_method() and other CrudTests are above.</span>
+
+<span class="k">class</span> <span class="nc">TestUsersCrud</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">test_delete_all</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">resp</span> <span class="o">=</span> <span class="n">app</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;/users/delete?all=1&#39;</span><span class="p">,</span> <span class="n">user_id</span><span class="o">=</span><span class="n">user_id</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">User</span><span class="o">.</span><span class="n">query</span><span class="o">.</span><span class="n">count</span><span class="p">()</span> <span class="o">==</span> <span class="mi">0</span>
+</pre></div>
+</div>
+<p>So, what's going to happen now?</p>
+
+
+
+
+</article>
+<article class="slide level-2" id="id11">
+
+<h2>Idempotent: Test Cleanup is OK</h2>
+
+<p>This test needs to do some cleanup to be a good citizen:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="k">class</span> <span class="nc">TestUsersCrud</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">class_teardown</span><span class="p">(</span><span class="n">cls</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; restore assumptions of other tests &quot;&quot;&quot;</span>
+        <span class="k">global</span> <span class="n">user_id</span>
+        <span class="n">user_id</span> <span class="o">=</span> <span class="n">User</span><span class="o">.</span><span class="n">testing_create</span><span class="p">()</span><span class="o">.</span><span class="n">id</span>
+
+    <span class="k">def</span> <span class="nf">test_delete_all</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">UserCrud</span><span class="o">.</span><span class="n">select_all</span><span class="p">()</span><span class="o">.</span><span class="n">delete</span><span class="p">()</span>
+        <span class="k">assert</span> <span class="n">User</span><span class="o">.</span><span class="n">query</span><span class="o">.</span><span class="n">count</span><span class="p">()</span> <span class="o">==</span> <span class="mi">0</span>
+</pre></div>
+</div>
+
+
+
+
+</article>
+<article class="slide level-2" id="id4">
+
+<h2>Tests as Assets</h2>
+
+<ul class="simple">
+<li>Easy to setup: the less manual steps the better.</li>
+<li>Consistent: avoid environment surprises.</li>
+<li>Idempotent (?): avoid cross-test data contamination.</li>
+<li><strong>Data creation made easy.</strong></li>
+<li>Enforce good patterns: my memory is getting worse.</li>
+<li>Fast: quick iterations make testing enjoyable.</li>
+<li>Flexible: can roll w/ the punches when assumptions change (migrations)</li>
+</ul>
+
+
+
+
+</article>
+<article class="slide level-2" id="data-creation">
+
+<h2>Data Creation</h2>
+
+<ul class="build simple">
+<li>Fixtures or factories?</li>
+<li>Anyone use fixtures?</li>
+<li>I prefer factories.</li>
+</ul>
+
+
+
+
+</article>
+<article class="slide level-2" id="fixtures">
+
+<h2>Fixtures</h2>
+
+<div class="highlight-yaml"><div class="highlight"><pre><span class="p-Indicator">-</span> <span class="l-Scalar-Plain">table</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">authors</span>
+  <span class="l-Scalar-Plain">records</span><span class="p-Indicator">:</span>
+    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">id</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">1, first_name</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">William, last_name</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">Gibson</span>
+
+<span class="p-Indicator">-</span> <span class="l-Scalar-Plain">table</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">books</span>
+  <span class="l-Scalar-Plain">records</span><span class="p-Indicator">:</span>
+    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">id</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">1, title</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">Neuromancer, author_id</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">1, published_date</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">1984-07-01</span>
+    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">id</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">2, title</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">Count Zero, author_id</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">1, published_date</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">1986-03-01</span>
+    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">id</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">3, title</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">Neuromancer, author_id</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">1, published_date</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">1988-10-01</span>
+
+<span class="p-Indicator">-</span> <span class="l-Scalar-Plain">table</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">orders</span>
+  <span class="l-Scalar-Plain">records</span><span class="p-Indicator">:</span>
+    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">ident</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">a, book_id</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">1, status</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">pending</span>
+    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">ident</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">b, book_id</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">2, status</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">shipped</span>
+    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">ident</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">c, book_id</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">3, status</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">delivered</span>
+</pre></div>
+</div>
+
+
+
+
+</article>
+<article class="slide level-2" id="factories">
+
+<h2>Factories</h2>
+
+<p>Isn't this better?</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">Order</span><span class="o">.</span><span class="n">testing_create</span><span class="p">(</span><span class="n">status</span><span class="o">=</span><span class="s">&#39;pending&#39;</span><span class="p">)</span>
+<span class="n">Order</span><span class="o">.</span><span class="n">testing_create</span><span class="p">(</span><span class="n">status</span><span class="o">=</span><span class="s">&#39;shipped&#39;</span><span class="p">)</span>
+<span class="n">Order</span><span class="o">.</span><span class="n">testing_create</span><span class="p">(</span><span class="n">status</span><span class="o">=</span><span class="s">&#39;delivered&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+
+
+
+
+</article>
+<article class="slide level-2" id="testing-create-method">
+
+<h2>Testing Create Method</h2>
+
+<p>We used to hand-code every <code class="code docutils literal"><span class="pre">testing_create()</span></code> method:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="k">class</span> <span class="nc">Order</span><span class="p">(</span><span class="n">db</span><span class="o">.</span><span class="n">Model</span><span class="p">):</span>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">testing_create</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">ident</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;ident&#39;</span><span class="p">)</span> <span class="ow">or</span> <span class="n">randchars</span><span class="p">()</span>
+        <span class="n">ots</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;order_timestamp&#39;</span><span class="p">)</span> <span class="ow">or</span> <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span>
+        <span class="n">book</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;book&#39;</span><span class="p">)</span> <span class="ow">or</span> <span class="n">Book</span><span class="o">.</span><span class="n">testing_create</span><span class="p">()</span>
+        <span class="c"># ... etc.</span>
+        <span class="k">return</span> <span class="n">cls</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">ident</span><span class="p">,</span> <span class="n">ots</span><span class="p">,</span> <span class="n">book</span><span class="p">,</span> <span class="o">...</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>This isn't hard, but magic is better.</p>
+
+
+
+
+</article>
+<article class="slide level-2" id="id12">
+
+<h2>Testing Create Method</h2>
+
+<div class="highlight-python"><div class="highlight"><pre><span class="k">class</span> <span class="nc">SurchargeRate</span><span class="p">(</span><span class="n">db</span><span class="o">.</span><span class="n">Model</span><span class="p">,</span> <span class="n">MethodsMixin</span><span class="p">):</span>
+    <span class="nb">id</span> <span class="o">=</span> <span class="n">sa</span><span class="o">.</span><span class="n">Column</span><span class="p">(</span><span class="n">sa</span><span class="o">.</span><span class="n">ForeignKey</span><span class="p">(</span><span class="n">Action</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">ondelete</span><span class="o">=</span><span class="s">&#39;cascade&#39;</span><span class="p">),</span> <span class="n">primary_key</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+    <span class="n">table</span> <span class="o">=</span> <span class="n">sa</span><span class="o">.</span><span class="n">Column</span><span class="p">(</span><span class="n">sa</span><span class="o">.</span><span class="n">String</span><span class="p">(</span><span class="mi">2</span><span class="p">),</span> <span class="n">nullable</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+    <span class="n">card_plan</span> <span class="o">=</span> <span class="n">sa</span><span class="o">.</span><span class="n">Column</span><span class="p">(</span><span class="n">sa</span><span class="o">.</span><span class="n">String</span><span class="p">(</span><span class="mi">4</span><span class="p">),</span> <span class="n">nullable</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+    <span class="n">charge_type</span> <span class="o">=</span> <span class="n">sa</span><span class="o">.</span><span class="n">Column</span><span class="p">(</span><span class="n">sa</span><span class="o">.</span><span class="n">String</span><span class="p">(</span><span class="mi">4</span><span class="p">),</span> <span class="n">nullable</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+    <span class="n">combine_code</span> <span class="o">=</span> <span class="n">sa</span><span class="o">.</span><span class="n">Column</span><span class="p">(</span><span class="n">sa</span><span class="o">.</span><span class="n">String</span><span class="p">(</span><span class="mi">10</span><span class="p">),</span> <span class="n">nullable</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+    <span class="n">description</span> <span class="o">=</span> <span class="n">sa</span><span class="o">.</span><span class="n">Column</span><span class="p">(</span><span class="n">sa</span><span class="o">.</span><span class="n">String</span><span class="p">(</span><span class="mi">39</span><span class="p">),</span> <span class="n">nullable</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+    <span class="c"># SNIP...four more columns in real life</span>
+
+    <span class="c"># hierarchy relationship</span>
+    <span class="n">hierarchy_id</span> <span class="o">=</span> <span class="n">sa</span><span class="o">.</span><span class="n">Column</span><span class="p">(</span><span class="n">sa</span><span class="o">.</span><span class="n">ForeignKey</span><span class="p">(</span><span class="n">Hierarchy</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">ondelete</span><span class="o">=</span><span class="s">&#39;cascade&#39;</span><span class="p">),</span> <span class="n">nullable</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+    <span class="n">hierarchy</span> <span class="o">=</span> <span class="n">saorm</span><span class="o">.</span><span class="n">relationship</span><span class="p">(</span><span class="n">Hierarchy</span><span class="p">,</span> <span class="n">lazy</span><span class="o">=</span><span class="s">&#39;joined&#39;</span><span class="p">)</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">testing_create</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">if</span> <span class="s">&#39;hierarchy&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">kwargs</span> <span class="ow">and</span> <span class="s">&#39;hierarchy_id&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
+            <span class="n">kwargs</span><span class="p">[</span><span class="s">&#39;hierarchy&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">Hierarchy</span><span class="o">.</span><span class="n">testing_create</span><span class="p">(</span><span class="n">_commit</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+        <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">testing_create</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+</pre></div>
+</div>
+
+
+
+
+</article>
+<article class="slide level-2" id="id13">
+
+<h2>Testing Create Method</h2>
+
+<p>See GitHub for <code class="code docutils literal"><span class="pre">testing_create()</span></code> definition.</p>
+
+
+
+
+</article>
+<article class="slide level-2" id="id5">
+
+<h2>Tests as Assets</h2>
+
+<ul class="simple">
+<li>Easy to setup: the less manual steps the better.</li>
+<li>Consistent: avoid environment surprises.</li>
+<li>Idempotent (?): avoid cross-test data contamination.</li>
+<li>Data creation made easy.</li>
+<li><strong>Enforce good patterns: my memory is getting worse.</strong></li>
+<li>Fast: quick iterations make testing enjoyable.</li>
+<li>Flexible: can roll w/ the punches when assumptions change (migrations)</li>
+</ul>
+
+
+
+
+</article>
+<article class="slide level-2" id="enforcing-good-patterns">
+
+<h2>Enforcing Good Patterns</h2>
+
+<p>Adding id and timestamp columns using mixins:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="k">class</span> <span class="nc">DefaultColsMixin</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="nb">id</span> <span class="o">=</span> <span class="n">sa</span><span class="o">.</span><span class="n">Column</span><span class="p">(</span><span class="n">sa</span><span class="o">.</span><span class="n">Integer</span><span class="p">,</span> <span class="n">primary_key</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+    <span class="n">created_utc</span> <span class="o">=</span> <span class="n">sa</span><span class="o">.</span><span class="n">Column</span><span class="p">(</span><span class="n">ArrowType</span><span class="p">,</span> <span class="n">nullable</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span>
+        <span class="n">default</span><span class="o">=</span><span class="n">arrow</span><span class="o">.</span><span class="n">now</span><span class="p">,</span> <span class="n">server_default</span><span class="o">=</span><span class="n">utcnow</span><span class="p">())</span>
+    <span class="n">updated_utc</span> <span class="o">=</span> <span class="n">sa</span><span class="o">.</span><span class="n">Column</span><span class="p">(</span><span class="n">ArrowType</span><span class="p">,</span> <span class="n">nullable</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span>
+        <span class="n">default</span><span class="o">=</span><span class="n">arrow</span><span class="o">.</span><span class="n">now</span><span class="p">,</span> <span class="n">onupdate</span><span class="o">=</span><span class="n">arrow</span><span class="o">.</span><span class="n">now</span><span class="p">,</span> <span class="n">server_default</span><span class="o">=</span><span class="n">utcnow</span><span class="p">())</span>
+</pre></div>
+</div>
+
+
+
+
+</article>
+<article class="slide level-2" id="id14">
+
+<h2>Enforcing Good Patterns</h2>
+
+<p>Using a base test class (on GitHub):</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="k">class</span> <span class="nc">TestSurchargeRate</span><span class="p">(</span><span class="n">EntityBase</span><span class="p">):</span>
+    <span class="n">entity_cls</span> <span class="o">=</span> <span class="n">ents</span><span class="o">.</span><span class="n">SurchargeRate</span>
+    <span class="n">delete_all_on</span> <span class="o">=</span> <span class="s">&#39;setup&#39;</span>
+    <span class="n">column_checks</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="n">ColumnCheck</span><span class="p">(</span><span class="s">&#39;table&#39;</span><span class="p">),</span>
+        <span class="n">ColumnCheck</span><span class="p">(</span><span class="s">&#39;card_plan&#39;</span><span class="p">),</span>
+        <span class="n">ColumnCheck</span><span class="p">(</span><span class="s">&#39;charge_type&#39;</span><span class="p">),</span>
+        <span class="n">ColumnCheck</span><span class="p">(</span><span class="s">&#39;combine_code&#39;</span><span class="p">),</span>
+        <span class="n">ColumnCheck</span><span class="p">(</span><span class="s">&#39;description&#39;</span><span class="p">),</span>
+        <span class="n">ColumnCheck</span><span class="p">(</span><span class="s">&#39;pi_apply_type&#39;</span><span class="p">),</span>
+        <span class="n">ColumnCheck</span><span class="p">(</span><span class="s">&#39;pi_rate&#39;</span><span class="p">),</span>
+        <span class="n">ColumnCheck</span><span class="p">(</span><span class="s">&#39;pct_apply_type&#39;</span><span class="p">),</span>
+        <span class="n">ColumnCheck</span><span class="p">(</span><span class="s">&#39;pct_rate&#39;</span><span class="p">),</span>
+        <span class="n">ColumnCheck</span><span class="p">(</span><span class="s">&#39;hiearchy_id&#39;</span><span class="p">,</span> <span class="n">fk</span><span class="o">=</span><span class="s">&#39;actions.id&#39;</span><span class="p">),</span>
+    <span class="p">]</span>
+</pre></div>
+</div>
+
+
+
+
+</article>
+<article class="slide level-2" id="patterns-to-enforce">
+
+<h2>Patterns to Enforce</h2>
+
+<ul class="simple">
+<li>Checking nulls: SA default is NULL</li>
+<li>unique columns &amp; multi-column unique constraints</li>
+<li>foreign key cascades</li>
+<li>relationship cascades</li>
+<li>created and updated timestamp columns</li>
+<li>utc vs non-utc timestamps</li>
+<li>add &amp; count record</li>
+<li>make sure all columns have been tested</li>
+</ul>
+
+
+
+
+</article>
+<article class="slide level-2" id="id6">
+
+<h2>Tests as Assets</h2>
+
+<ul class="simple">
+<li>Easy to setup: the less manual steps the better.</li>
+<li>Consistent: avoid environment surprises.</li>
+<li>Idempotent (?): avoid cross-test data contamination.</li>
+<li>Data creation made easy.</li>
+<li>Enforce good patterns: my memory is getting worse.</li>
+<li><strong>Fast: quick iterations make testing enjoyable.</strong></li>
+<li>Flexible: can roll w/ the punches when assumptions change (migrations)</li>
+</ul>
+
+
+
+
+</article>
+<article class="slide level-2" id="speed-as-fast-as-reasonable">
+
+<h2>Speed: As Fast as Reasonable</h2>
+
+<p>Don't do premature optimization!  (example)</p>
+<ul class="build simple">
+<li>Avoid DB round trips when possible (CSV of user emails)</li>
+<li>Creating testing objects without committing or flushing to the DB.</li>
+<li>Testing the configuration, not the execution (nullability &amp; FK)</li>
+<li>Knowing when to commit (nested objects)</li>
+</ul>
+
+
+
+
+</article>
+<article class="slide level-2" id="id15">
+
+<h2>Speed: As Fast as Reasonable</h2>
+
+<ul class="build simple">
+<li>Be careful of network/vm issues that can slow data connections (dev example).</li>
+<li>Maybe test with in-memory SQLite (watch our for foreign key, data type issues)</li>
+<li>Run only the tests you need, follow the inside-out pattern.</li>
+<li>Parallelize your tests.</li>
+</ul>
+
+
+
+
+</article>
+<article class="slide level-2" id="id7">
+
+<h2>Tests as Assets</h2>
+
+<ul class="simple">
+<li>Easy to setup: the less manual steps the better.</li>
+<li>Consistent: avoid environment surprises.</li>
+<li>Idempotent (?): avoid cross-test data contamination.</li>
+<li>Data creation made easy.</li>
+<li>Enforce good patterns: my memory is getting worse.</li>
+<li>Fast: quick iterations make testing enjoyable.</li>
+<li><strong>Flexible: can roll w/ the punches when assumptions change (migrations)</strong></li>
+</ul>
+
+
+
+
+</article>
+<article class="slide level-2" id="flexibility-migrations">
+
+<h2>Flexibility: Migrations</h2>
+
+<p>Migrations break many of the assumptions we have made.  Let's consider a migration that:</p>
+<ul class="simple">
+<li>Creates a <code class="code docutils literal"><span class="pre">user_emails</span></code> table and migrates <code class="code docutils literal"><span class="pre">users.email</span></code> to said table</li>
+<li>Removes <code class="code docutils literal"><span class="pre">users.email</span></code></li>
+<li>Searches users email and replaces &quot;#&quot; with &quot;&#64;&quot;</li>
+</ul>
+
+
+
+
+</article>
+<article class="slide level-2" id="migrations-current-production-schema">
+
+<h2>Migrations: Current Production Schema</h2>
+
+<ul class="simple">
+<li>By the time you write these tests, your model reflects the new configuration.</li>
+<li>You will need a way to recreate the schema as it existed.</li>
+<li>You may want to isolate your migration tests, they are not long-term assets.</li>
+</ul>
+
+
+
+
+</article>
+<article class="slide level-2" id="migration-testing-workflow">
+
+<h2>Migration: Testing Workflow</h2>
+
+<ul class="build simple">
+<li>Get the old schema loaded</li>
+<li>Run Phase I of the migration (creating new schema)</li>
+<li>Load data and run tests that verify data migrations (using SQL or Automap)</li>
+<li>Run Phase II of the migration (cleanup old schema)</li>
+<li>Run tests to verify schema cleanup (SQL)</li>
+<li>Run tests to verify migration that didn't depend on old schema (current Entities)</li>
+</ul>
+
+
+
+
+</article>
+<article class="slide level-2" id="thanks">
+
+<h2>Thanks</h2>
+
+<p>Thanks for attending!</p>
+
+
+
+
+</article>
+
+</section>
+
+<section id="slide_notes">
+
+</section>
+
+  </body>
+</html>
